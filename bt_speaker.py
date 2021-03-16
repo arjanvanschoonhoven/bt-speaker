@@ -18,6 +18,7 @@ import math
 import configparser
 import io
 import os
+import subprocess
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -79,7 +80,8 @@ class PipedSBCAudioSinkWithAlsaVolumeControl(SBCAudioSink):
         volume = math.pow(volume, 1.0/3.0)
 
         # alsamixer takes a percent value as integer from 0-100
-        self.alsamixer.setvolume(int(volume * 100.0))
+        #self.alsamixer.setvolume(int(volume * 100.0))
+        subprocess.call('amixer sset Digital ' + str(volume * 100.0) + '%', shell=True)
 
 class AutoAcceptSingleAudioAgent(BTAgent):
     """
@@ -192,7 +194,7 @@ def setup_bt():
     # setup bluetooth agent (that manages connections of devices)
     agent = AutoAcceptSingleAudioAgent(connect, disconnect, track)
     manager = BTAgentManager()
-    manager.register_agent(agent._path, "NoInputNoOutput")
+    manager.register_agent(agent._path, "DisplayOnly")
     manager.request_default_agent(agent._path)
 
     startup()
@@ -206,6 +208,9 @@ def run():
 
     # catch SIGTERM
     GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGTERM, lambda signal: mainloop.quit(), None)
+
+    print("Set volume to 40%")
+    subprocess.call('amixer sset Digital 40%', shell=True)
 
     # setup bluetooth configuration
     setup_bt()
